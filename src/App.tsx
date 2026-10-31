@@ -49,7 +49,6 @@ function App() {
     setIsSearching(true);
     setActivePanel('news');
 
-    // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     const results = generateMockNews(searchQuery);
@@ -126,7 +125,7 @@ function App() {
           bookmarkCount={bookmarks.length}
         />
 
-        <main className="flex-1 max-w-6xl mx-auto px-4 py-6">
+        <main className="flex-1 max-w-5xl mx-auto px-6 py-8">
           <SearchBar onSearch={handleSearch} isLoading={isSearching} />
 
           {aiSummary && (
@@ -134,14 +133,15 @@ function App() {
           )}
 
           {searchResults.length > 0 && (
-            <div className="mt-6">
+            <div className="mt-8">
               {/* Filters */}
-              <div className="flex flex-wrap gap-3 mb-4 items-center">
-                <span className="text-sm text-gray-500">필터:</span>
+              <div className="flex flex-wrap gap-3 mb-5 items-center bg-gray-50/50 border border-gray-100 rounded-xl p-3">
+                <span className="text-xs text-gray-400 font-medium uppercase tracking-wide">필터</span>
+                <div className="w-px h-4 bg-gray-200" />
                 <select
                   value={filters.sortBy}
                   onChange={e => setFilters(f => ({ ...f, sortBy: e.target.value as any }))}
-                  className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white"
+                  className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="importance">중요도순</option>
                   <option value="date">최신순</option>
@@ -150,7 +150,7 @@ function App() {
                 <select
                   value={filters.dateRange}
                   onChange={e => setFilters(f => ({ ...f, dateRange: e.target.value as any }))}
-                  className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white"
+                  className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="1h">1시간 이내</option>
                   <option value="6h">6시간 이내</option>
@@ -162,24 +162,24 @@ function App() {
                 <select
                   value={filters.biasFilter}
                   onChange={e => setFilters(f => ({ ...f, biasFilter: e.target.value as any }))}
-                  className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white"
+                  className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">전체 편향</option>
                   <option value="left">진보</option>
                   <option value="center">중립</option>
                   <option value="right">보수</option>
                 </select>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">최저 신뢰도:</span>
+                <div className="flex items-center gap-2 ml-auto">
+                  <span className="text-xs text-gray-400">최저 신뢰도</span>
                   <input
                     type="range"
                     min="0"
                     max="100"
                     value={filters.credibility}
                     onChange={e => setFilters(f => ({ ...f, credibility: Number(e.target.value) }))}
-                    className="w-24"
+                    className="w-24 accent-blue-600"
                   />
-                  <span className="text-sm font-medium">{filters.credibility}%</span>
+                  <span className="text-xs font-semibold text-gray-600 w-8 text-right">{filters.credibility}%</span>
                 </div>
               </div>
 
@@ -203,16 +203,20 @@ function App() {
           )}
 
           {searchResults.length === 0 && !isSearching && (
-            <div className="text-center py-20">
-              <div className="text-6xl mb-4">🔍</div>
-              <h2 className="text-2xl font-semibold text-gray-700 mb-2">정보를 검색하세요</h2>
-              <p className="text-gray-500">AI가 뉴스를 분석하고 중요한 정보를 정리해드립니다</p>
+            <div className="text-center py-24">
+              <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center">
+                <svg className="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-700 mb-2">정보를 검색하세요</h2>
+              <p className="text-gray-400 text-sm">AI가 뉴스를 분석하고 중요한 정보를 정리해드립니다</p>
               <div className="mt-8 flex flex-wrap justify-center gap-2">
                 {['AI 규제', '기후변화', '반도체', '부동산', '디지털화폐'].map(tag => (
                   <button
                     key={tag}
                     onClick={() => handleSearch(tag)}
-                    className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full text-sm text-gray-600 transition-colors"
+                    className="px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-full text-sm text-gray-600 transition-all hover:border-gray-300 hover:shadow-sm"
                   >
                     {tag}
                   </button>
