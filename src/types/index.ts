@@ -76,10 +76,30 @@ export interface BiasAnalysis {
 }
 
 export interface APIConfig {
-  provider: 'openai' | 'anthropic' | 'custom';
+  provider: 'openai' | 'anthropic';
   apiKey: string;
   baseUrl: string;
   model: string;
+  temperature: number;
+  maxTokens: number;
+}
+
+export interface ModelInfo {
+  id: string;
+  name: string;
+  description: string;
+  contextWindow: number;
+  pricing?: {
+    input: number;
+    output: number;
+  };
+}
+
+export interface APIUsage {
+  totalRequests: number;
+  totalTokens: number;
+  lastRequest?: string;
+  estimatedCost: number;
 }
 
 export interface SearchFilters {

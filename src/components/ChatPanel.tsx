@@ -6,9 +6,10 @@ interface ChatPanelProps {
   onSend: (message: string, type: 'chat' | 'research' | 'factcheck') => void;
   onClose: () => void;
   currentQuery: string;
+  hasApiKey: boolean;
 }
 
-export default function ChatPanel({ messages, onSend, onClose, currentQuery }: ChatPanelProps) {
+export default function ChatPanel({ messages, onSend, onClose, currentQuery, hasApiKey }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [mode, setMode] = useState<'chat' | 'research' | 'factcheck'>('chat');
 
@@ -91,21 +92,41 @@ export default function ChatPanel({ messages, onSend, onClose, currentQuery }: C
       <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin">
         {messages.length === 0 && (
           <div className="py-8">
-            <p className="text-sm text-gray-400 mb-4 text-center">AI에게 질문하거나 리서치를 요청하세요</p>
-            <div className="space-y-2">
-              {quickActions.map((action, i) => (
-                <button
-                  key={i}
-                  onClick={() => onSend(action.prompt, action.mode)}
-                  className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm bg-gray-50 hover:bg-gray-100 rounded-xl text-gray-600 transition-colors group"
-                >
-                  <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={action.icon} />
+            {!hasApiKey ? (
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-amber-50 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                   </svg>
-                  <span className="font-medium">{action.label}</span>
-                </button>
-              ))}
-            </div>
+                </div>
+                <p className="text-sm text-gray-600 font-medium mb-1">API 키가 필요합니다</p>
+                <p className="text-xs text-gray-400 mb-4">설정에서 API 키를 입력해주세요</p>
+                <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3 text-left">
+                  <p className="font-medium mb-1">지원 API:</p>
+                  <p>• OpenAI (GPT-4o, GPT-4, GPT-3.5)</p>
+                  <p>• Anthropic (Claude 3.5, Claude 3)</p>
+                  <p>• OpenAI 호환 (Together, Groq 등)</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-gray-400 mb-4 text-center">AI에게 질문하거나 리서치를 요청하세요</p>
+                <div className="space-y-2">
+                  {quickActions.map((action, i) => (
+                    <button
+                      key={i}
+                      onClick={() => onSend(action.prompt, action.mode)}
+                      className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm bg-gray-50 hover:bg-gray-100 rounded-xl text-gray-600 transition-colors group"
+                    >
+                      <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={action.icon} />
+                      </svg>
+                      <span className="font-medium">{action.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 

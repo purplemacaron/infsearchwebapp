@@ -13,6 +13,15 @@ import SettingsModal from './components/SettingsModal';
 import Sidebar from './components/Sidebar';
 
 function App() {
+  // GitHub Pages redirect 처리
+  useEffect(() => {
+    const redirect = sessionStorage.getItem('redirect');
+    if (redirect) {
+      sessionStorage.removeItem('redirect');
+      window.history.replaceState(null, '', redirect.replace(window.location.origin, ''));
+    }
+  }, []);
+
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<NewsItem[]>([]);
   const [aiSummary, setAiSummary] = useState<AISummary | null>(null);
@@ -26,11 +35,21 @@ function App() {
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [apiConfig, setApiConfig] = useState<APIConfig>(() => {
     const saved = localStorage.getItem('infsearch-config');
-    return saved ? JSON.parse(saved) : {
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        ...parsed,
+        temperature: parsed.temperature ?? 0.7,
+        maxTokens: parsed.maxTokens ?? 4000,
+      };
+    }
+    return {
       provider: 'openai',
       apiKey: '',
       baseUrl: '',
-      model: 'gpt-4',
+      model: 'gpt-4o-mini',
+      temperature: 0.7,
+      maxTokens: 4000,
     };
   });
   const [filters, setFilters] = useState<SearchFilters>({
@@ -74,6 +93,19 @@ function App() {
     };
     setChatMessages(prev => [...prev, userMsg]);
 
+    // API 키 확인
+    if (!apiConfig.apiKey) {
+      const errorMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'API 키가 설정되지 않았습니다. 우측 상단의 설정 버튼을 클릭하여 API 키를 입력해주세요.',
+        timestamp: new Date().toISOString(),
+        type,
+      };
+      setChatMessages(prev => [...prev, errorMsg]);
+      return;
+    }
+
     const systemMsg: ChatMessage = {
       id: 'system',
       role: 'system',
@@ -81,16 +113,27 @@ function App() {
       timestamp: new Date().toISOString(),
     };
 
-    const response = await callAI([...chatMessages, systemMsg, userMsg], apiConfig);
+    try {
+      const response = await callAI([...chatMessages, systemMsg, userMsg], apiConfig);
 
-    const assistantMsg: ChatMessage = {
-      id: (Date.now() + 1).toString(),
-      role: 'assistant',
-      content: response,
-      timestamp: new Date().toISOString(),
-      type,
-    };
-    setChatMessages(prev => [...prev, assistantMsg]);
+      const assistantMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: response,
+        timestamp: new Date().toISOString(),
+        type,
+      };
+      setChatMessages(prev => [...prev, assistantMsg]);
+    } catch (error) {
+      const errorMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: `오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}\n\n설정에서 API 키와 모델 설정을 확인해주세요.`,
+        timestamp: new Date().toISOString(),
+        type,
+      };
+      setChatMessages(prev => [...prev, errorMsg]);
+    }
   };
 
   const toggleBookmark = (id: string) => {
@@ -290,6 +333,7 @@ function App() {
           onSend={handleChat}
           onClose={() => setShowChat(false)}
           currentQuery={query}
+          hasApiKey={!!apiConfig.apiKey}
         />
       )}
 
