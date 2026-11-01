@@ -201,6 +201,47 @@ export default function SettingsModal({ config, onSave, onClose }: SettingsModal
                 </p>
               </div>
 
+              {/* CORS Proxy Settings */}
+              <div className="border-t border-gray-100 pt-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">CORS 프록시 사용</label>
+                    <p className="text-xs text-gray-400 mt-0.5">NVIDIA 등 CORS 차단 API 사용 시 활성화</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLocalConfig(c => ({ ...c, useCorsProxy: !c.useCorsProxy }))}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      localConfig.useCorsProxy ? 'bg-blue-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        localConfig.useCorsProxy ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                
+                {localConfig.useCorsProxy && (
+                  <div className="mt-3">
+                    <label className="block text-xs font-medium text-gray-600 mb-1.5">CORS 프록시 URL</label>
+                    <input
+                      type="text"
+                      value={localConfig.corsProxyUrl || ''}
+                      onChange={e => setLocalConfig(c => ({ ...c, corsProxyUrl: e.target.value }))}
+                      placeholder="https://cors-anywhere.herokuapp.com/"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-400 mt-1.5">
+                      공개 프록시: <code className="bg-gray-100 px-1 rounded">https://cors-anywhere.herokuapp.com/</code>
+                      <br />
+                      또는 자체 프록시 서버 URL을 입력하세요.
+                    </p>
+                  </div>
+                )}
+              </div>
+
               {/* Advanced Settings */}
               <div className="border-t border-gray-100 pt-5">
                 <h3 className="text-sm font-medium text-gray-700 mb-3">고급 설정</h3>

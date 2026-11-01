@@ -126,8 +126,14 @@ export async function testAPIConnection(config: APIConfig): Promise<{ success: b
     if (config.provider === 'openai') {
       const baseUrl = config.baseUrl || 'https://api.openai.com/v1';
       
+      // CORS 프록시 사용 설정
+      let modelsUrl = `${baseUrl}/models`;
+      if (config.useCorsProxy && config.corsProxyUrl) {
+        modelsUrl = `${config.corsProxyUrl}${encodeURIComponent(modelsUrl)}`;
+      }
+      
       try {
-        const response = await fetch(`${baseUrl}/models`, {
+        const response = await fetch(modelsUrl, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${config.apiKey}`,
@@ -155,7 +161,7 @@ export async function testAPIConnection(config: APIConfig): Promise<{ success: b
               if (response.status === 401) {
                 errorMessage = 'API 키가 유효하지 않습니다. nvapi-로 시작하는 키를 사용하세요.';
               } else if (response.status === 403) {
-                errorMessage = 'CORS 오류: NVIDIA API는 브라우저에서 직접 호출할 수 없습니다.';
+                errorMessage = 'CORS 오류: 설정에서 CORS 프록시를 활성화하세요.';
               }
             }
           } catch (e) {
@@ -173,16 +179,16 @@ export async function testAPIConnection(config: APIConfig): Promise<{ success: b
         
         // 네트워크 에러 (CORS 등)
         if (fetchError instanceof TypeError && fetchError.message.includes('Failed to fetch')) {
-          if (baseUrl.includes('nvidia.com')) {
+          if (baseUrl.includes('nvidia.com') && !config.useCorsProxy) {
             return {
               success: false,
-              message: 'NVIDIA API 연결 실패: CORS 문제입니다. NVIDIA NIM API는 브라우저에서 직접 호출할 수 없습니다. CORS 프록시를 사용하거나 서버사이드에서 호출해야 합니다.',
+              message: 'NVIDIA API 연결 실패: CORS 문제입니다. 설정에서 "CORS 프록시 사용"을 활성화하세요.',
               latency
             };
           }
           return {
             success: false,
-            message: 'API 연결 실패: 네트워크 오류 또는 CORS 문제입니다. Base URL을 확인하세요.',
+            message: 'API 연결 실패: 네트워크 오류 또는 CORS 문제입니다. CORS 프록시 설정을 확인하세요.',
             latency
           };
         }
@@ -191,8 +197,14 @@ export async function testAPIConnection(config: APIConfig): Promise<{ success: b
     } else if (config.provider === 'anthropic') {
       const baseUrl = config.baseUrl || 'https://api.anthropic.com/v1';
       
+      // CORS 프록시 사용 설정
+      let apiUrl = `${baseUrl}/messages`;
+      if (config.useCorsProxy && config.corsProxyUrl) {
+        apiUrl = `${config.corsProxyUrl}${encodeURIComponent(apiUrl)}`;
+      }
+      
       try {
-        const response = await fetch(`${baseUrl}/messages`, {
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -229,9 +241,16 @@ export async function testAPIConnection(config: APIConfig): Promise<{ success: b
         const latency = Date.now() - startTime;
         
         if (fetchError instanceof TypeError && fetchError.message.includes('Failed to fetch')) {
+          if (!config.useCorsProxy) {
+            return {
+              success: false,
+              message: 'API 연결 실패: CORS 문제입니다. 설정에서 "CORS 프록시 사용"을 활성화하세요.',
+              latency
+            };
+          }
           return {
             success: false,
-            message: 'API 연결 실패: 네트워크 오류 또는 CORS 문제입니다. Anthropic API는 브라우저에서 직접 호출 시 CORS 제한이 있을 수 있습니다.',
+            message: 'API 연결 실패: 네트워크 오류 또는 CORS 프록시 문제입니다. 프록시 URL을 확인하세요.',
             latency
           };
         }
@@ -256,8 +275,14 @@ export async function fetchAvailableModels(config: APIConfig): Promise<ModelInfo
     if (config.provider === 'openai') {
       const baseUrl = config.baseUrl || 'https://api.openai.com/v1';
       
+      // CORS 프록시 사용 설정
+      let modelsUrl = `${baseUrl}/models`;
+      if (config.useCorsProxy && config.corsProxyUrl) {
+        modelsUrl = `${config.corsProxyUrl}${encodeURIComponent(modelsUrl)}`;
+      }
+      
       try {
-        const response = await fetch(`${baseUrl}/models`, {
+        const response = await fetch(modelsUrl, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${config.apiKey}`,
@@ -292,10 +317,10 @@ export async function fetchAvailableModels(config: APIConfig): Promise<ModelInfo
       } catch (fetchError) {
         // 네트워크 에러 (CORS 등)
         if (fetchError instanceof TypeError && fetchError.message.includes('Failed to fetch')) {
-          if (baseUrl.includes('nvidia.com')) {
-            throw new Error('NVIDIA API 연결 실패: CORS 문제입니다. 모델 목록을 가져올 수 없습니다.');
+          if (baseUrl.includes('nvidia.com') && !config.useCorsProxy) {
+            throw new Error('NVIDIA API 연결 실패: CORS 문제입니다. 설정에서 "CORS 프록시 사용"을 활성화하세요.');
           }
-          throw new Error('API 연결 실패: 네트워크 오류 또는 CORS 문제입니다.');
+          throw new Error('API 연결 실패: 네트워크 오류 또는 CORS 문제입니다. CORS 프록시 설정을 확인하세요.');
         }
         throw fetchError;
       }
@@ -352,11 +377,17 @@ export async function callAI(messages: ChatMessage[], config: APIConfig): Promis
 async function callOpenAI(messages: ChatMessage[], config: APIConfig): Promise<{ content: string; inputTokens: number; outputTokens: number }> {
   const baseUrl = config.baseUrl || 'https://api.openai.com/v1';
   
+  // CORS 프록시 사용 설정
+  let apiUrl = `${baseUrl}/chat/completions`;
+  if (config.useCorsProxy && config.corsProxyUrl) {
+    apiUrl = `${config.corsProxyUrl}${encodeURIComponent(apiUrl)}`;
+  }
+  
   const inputText = messages.map(m => m.content).join(' ');
   const inputTokens = estimateTokens(inputText);
 
   try {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -383,7 +414,7 @@ async function callOpenAI(messages: ChatMessage[], config: APIConfig): Promise<{
           } else if (response.status === 404) {
             errorMessage = '모델을 찾을 수 없습니다. NVIDIA에서 사용 가능한 모델 ID를 확인하세요.';
           } else if (response.status === 403) {
-            errorMessage = 'CORS 오류: NVIDIA API는 브라우저에서 직접 호출할 수 없습니다. 서버사이드 프록시가 필요합니다.';
+            errorMessage = 'CORS 오류: 설정에서 CORS 프록시를 활성화하세요.';
           }
         }
       } catch (e) {
@@ -400,10 +431,10 @@ async function callOpenAI(messages: ChatMessage[], config: APIConfig): Promise<{
   } catch (error) {
     // 네트워크 에러 (CORS 등)
     if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      if (baseUrl.includes('nvidia.com')) {
-        throw new Error('NVIDIA API 연결 실패: CORS 문제입니다. NVIDIA NIM API는 브라우저에서 직접 호출할 수 없습니다. CORS 프록시를 사용하거나 서버사이드에서 호출해야 합니다.');
+      if (baseUrl.includes('nvidia.com') && !config.useCorsProxy) {
+        throw new Error('NVIDIA API 연결 실패: CORS 문제입니다. 설정에서 "CORS 프록시 사용"을 활성화하세요.');
       }
-      throw new Error('API 연결 실패: 네트워크 오류 또는 CORS 문제입니다. Base URL을 확인하세요.');
+      throw new Error('API 연결 실패: 네트워크 오류 또는 CORS 문제입니다. Base URL을 확인하거나 CORS 프록시를 활성화하세요.');
     }
     throw error;
   }

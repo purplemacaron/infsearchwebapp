@@ -45,6 +45,8 @@ function App() {
         temperature: parsed.temperature ?? 0.7,
         maxTokens: parsed.maxTokens ?? 4000,
         newsApiKey: parsed.newsApiKey ?? '',
+        useCorsProxy: parsed.useCorsProxy ?? false,
+        corsProxyUrl: parsed.corsProxyUrl ?? '',
       };
     }
     return {
@@ -55,6 +57,8 @@ function App() {
       temperature: 0.7,
       maxTokens: 4000,
       newsApiKey: '',
+      useCorsProxy: false,
+      corsProxyUrl: '',
     };
   });
   const [filters, setFilters] = useState<SearchFilters>({
