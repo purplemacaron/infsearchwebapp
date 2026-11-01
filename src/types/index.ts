@@ -110,3 +110,11 @@ export interface SearchFilters {
   sortBy: 'importance' | 'date' | 'credibility' | 'relevance';
   sourceType: 'all' | SourceType;
 }
+
+export interface SearchStrategy {
+  mainQuery: string;
+  relatedQueries: string[];
+  angles: string[];
+  keyEntities: string[];
+  suggestedSources: string[];
+}

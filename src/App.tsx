@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { NewsItem, ChatMessage, AISummary, FactCheckResult, BiasAnalysis, APIConfig, SearchFilters } from './types';
+import { NewsItem, ChatMessage, AISummary, FactCheckResult, BiasAnalysis, APIConfig, SearchFilters, SearchStrategy } from './types';
 import { generateMockSummary, generateMockFactCheck, generateMockBiasAnalysis, callAI } from './utils/api';
-import { performSearch } from './utils/search';
+import { performAISearch, analyzeResults } from './utils/aiSearch';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 import AISummaryPanel from './components/AISummaryPanel';
@@ -26,10 +26,12 @@ function App() {
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<NewsItem[]>([]);
   const [aiSummary, setAiSummary] = useState<AISummary | null>(null);
+  const [searchStrategy, setSearchStrategy] = useState<SearchStrategy | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [factCheckResults, setFactCheckResults] = useState<FactCheckResult[]>([]);
   const [biasAnalysis, setBiasAnalysis] = useState<BiasAnalysis | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchStatus, setSearchStatus] = useState<string>('');
   const [showSettings, setShowSettings] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [activePanel, setActivePanel] = useState<'news' | 'factcheck' | 'bias' | 'timeline'>('news');
@@ -71,21 +73,32 @@ function App() {
     setQuery(searchQuery);
     setIsSearching(true);
     setActivePanel('news');
+    setSearchStatus('AI가 검색 전략을 수립하고 있습니다...');
 
     try {
-      // 실제 검색 API 호출
-      const results = await performSearch(searchQuery, apiConfig.apiKey);
-      const summary = generateMockSummary(searchQuery);
+      // AI 기반 검색 수행
+      setSearchStatus('AI가 검색 전략을 수립하고 있습니다...');
+      const { results, strategy } = await performAISearch(searchQuery, apiConfig);
+      
+      // AI로 결과 분석
+      setSearchStatus(`검색 완료 (${results.length}개 결과). AI가 분석 중입니다...`);
+      const aiAnalysis = await analyzeResults(searchQuery, results, apiConfig);
+      
+      // 요약 생성
+      const summary = generateMockSummary(searchQuery, strategy, aiAnalysis);
       const factChecks = generateMockFactCheck(searchQuery);
       const bias = generateMockBiasAnalysis(searchQuery);
 
       setSearchResults(results);
       setAiSummary(summary);
+      setSearchStrategy(strategy);
       setFactCheckResults(factChecks);
       setBiasAnalysis(bias);
+      setSearchStatus('');
     } catch (error) {
       console.error('Search error:', error);
       setSearchResults([]);
+      setSearchStatus('');
     } finally {
       setIsSearching(false);
     }
@@ -179,10 +192,10 @@ function App() {
         />
 
         <main className="flex-1 max-w-5xl mx-auto px-6 py-8">
-          <SearchBar onSearch={handleSearch} isLoading={isSearching} />
+          <SearchBar onSearch={handleSearch} isLoading={isSearching} status={searchStatus} />
 
           {aiSummary && (
-            <AISummaryPanel summary={aiSummary} query={query} />
+            <AISummaryPanel summary={aiSummary} query={query} strategy={searchStrategy} />
           )}
 
           {searchResults.length > 0 && (

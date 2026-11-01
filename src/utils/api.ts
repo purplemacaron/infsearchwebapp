@@ -539,17 +539,23 @@ export function generateMockNews(query: string): NewsItem[] {
   return mockNews;
 }
 
-export function generateMockSummary(query: string): AISummary {
+export function generateMockSummary(query: string, strategy?: any, aiAnalysis?: string): AISummary {
+  // AI 분석이 있으면 그것을 사용하고, 없으면 기본 요약 생성
+  const overview = aiAnalysis || `"${query}"와 관련하여 총 12개의 다양한 소스가 분석되었습니다. 공식 발표 2건, 주요 언론 보도 6건, SNS 1건, 커뮤니티 1건, 루머 1건, 영상 1건이 포함됩니다. 정부 정책 변화가 핵심 이슈이며, 전문가들은 이를 중대한 전환점으로 평가하고 있습니다.`;
+
+  // 전략이 있으면 관련 쿼리를 활용
+  const keyPoints = strategy?.relatedQueries?.slice(0, 5) || [
+    '정부의 공식 정책 발표 - 산업 전반 영향 예상 (신뢰도 98%)',
+    '전문가들, "중대한 전환점" 평가 (다수 동의)',
+    '반대 측, 잠재적 부작용 우려 제기',
+    '글로벌 시장 반응 및 국제 동향 주목',
+    'SNS에서 내부 정보 공유 (미확인)',
+    '여론 조사 결과 찬반 팽팽',
+  ];
+
   return {
-    overview: `"${query}"와 관련하여 총 12개의 다양한 소스가 분석되었습니다. 공식 발표 2건, 주요 언론 보도 6건, SNS 1건, 커뮤니티 1건, 루머 1건, 영상 1건이 포함됩니다. 정부 정책 변화가 핵심 이슈이며, 전문가들은 이를 중대한 전환점으로 평가하고 있습니다.`,
-    keyPoints: [
-      '정부의 공식 정책 발표 - 산업 전반 영향 예상 (신뢰도 98%)',
-      '전문가들, "중대한 전환점" 평가 (다수 동의)',
-      '반대 측, 잠재적 부작용 우려 제기',
-      '글로벌 시장 반응 및 국제 동향 주목',
-      'SNS에서 내부 정보 공유 (미확인)',
-      '여론 조사 결과 찬반 팽팽',
-    ],
+    overview,
+    keyPoints,
     timeline: [
       { date: '18시간 전', title: '여론 조사 결과 발표', description: '찬반 의견이 팽팽', sources: ['갤럽'] },
       { date: '12시간 전', title: '유튜브 요약 영상', description: '10분 완벽 정리', sources: ['YouTube'] },

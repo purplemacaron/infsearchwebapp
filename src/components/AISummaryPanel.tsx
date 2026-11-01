@@ -1,11 +1,12 @@
-import { AISummary } from '../types';
+import { AISummary, SearchStrategy } from '../types';
 
 interface AISummaryPanelProps {
   summary: AISummary;
   query: string;
+  strategy?: SearchStrategy | null;
 }
 
-export default function AISummaryPanel({ summary, query }: AISummaryPanelProps) {
+export default function AISummaryPanel({ summary, query, strategy }: AISummaryPanelProps) {
   return (
     <div className="bg-gradient-to-br from-slate-50 to-blue-50/50 border border-slate-200/60 rounded-2xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-5">
@@ -48,6 +49,60 @@ export default function AISummaryPanel({ summary, query }: AISummaryPanelProps) 
       </div>
 
       <p className="text-gray-700 leading-relaxed mb-5 text-[15px]">{summary.overview}</p>
+
+      {/* AI 검색 전략 */}
+      {strategy && (
+        <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm mb-4">
+          <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm">
+            <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            AI 검색 전략
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-xs font-semibold text-gray-500 mb-2">관련 검색어</h4>
+              <div className="flex flex-wrap gap-1.5">
+                {strategy.relatedQueries.map((q, i) => (
+                  <span key={i} className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md border border-indigo-100">
+                    {q}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 className="text-xs font-semibold text-gray-500 mb-2">분석 각도</h4>
+              <div className="flex flex-wrap gap-1.5">
+                {strategy.angles.map((angle, i) => (
+                  <span key={i} className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-md border border-purple-100">
+                    {angle}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 className="text-xs font-semibold text-gray-500 mb-2">핵심 엔티티</h4>
+              <div className="flex flex-wrap gap-1.5">
+                {strategy.keyEntities.map((entity, i) => (
+                  <span key={i} className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md border border-emerald-100">
+                    {entity}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 className="text-xs font-semibold text-gray-500 mb-2">추천 소스</h4>
+              <div className="flex flex-wrap gap-1.5">
+                {strategy.suggestedSources.map((source, i) => (
+                  <span key={i} className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-md border border-amber-100">
+                    {source}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
