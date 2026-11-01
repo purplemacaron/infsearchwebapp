@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NewsItem, ChatMessage, AISummary, FactCheckResult, BiasAnalysis, APIConfig, SearchFilters } from './types';
-import { generateMockNews, generateMockSummary, generateMockFactCheck, generateMockBiasAnalysis, callAI } from './utils/api';
+import { generateMockSummary, generateMockFactCheck, generateMockBiasAnalysis, callAI } from './utils/api';
+import { performSearch } from './utils/search';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 import AISummaryPanel from './components/AISummaryPanel';
@@ -41,6 +42,7 @@ function App() {
         ...parsed,
         temperature: parsed.temperature ?? 0.7,
         maxTokens: parsed.maxTokens ?? 4000,
+        newsApiKey: parsed.newsApiKey ?? '',
       };
     }
     return {
@@ -50,6 +52,7 @@ function App() {
       model: 'gpt-4o-mini',
       temperature: 0.7,
       maxTokens: 4000,
+      newsApiKey: '',
     };
   });
   const [filters, setFilters] = useState<SearchFilters>({
@@ -69,18 +72,23 @@ function App() {
     setIsSearching(true);
     setActivePanel('news');
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // 실제 검색 API 호출
+      const results = await performSearch(searchQuery, apiConfig.apiKey);
+      const summary = generateMockSummary(searchQuery);
+      const factChecks = generateMockFactCheck(searchQuery);
+      const bias = generateMockBiasAnalysis(searchQuery);
 
-    const results = generateMockNews(searchQuery);
-    const summary = generateMockSummary(searchQuery);
-    const factChecks = generateMockFactCheck(searchQuery);
-    const bias = generateMockBiasAnalysis(searchQuery);
-
-    setSearchResults(results);
-    setAiSummary(summary);
-    setFactCheckResults(factChecks);
-    setBiasAnalysis(bias);
-    setIsSearching(false);
+      setSearchResults(results);
+      setAiSummary(summary);
+      setFactCheckResults(factChecks);
+      setBiasAnalysis(bias);
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleChat = async (message: string, type: 'chat' | 'research' | 'factcheck' = 'chat') => {

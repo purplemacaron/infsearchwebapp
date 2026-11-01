@@ -169,6 +169,26 @@ export default function SettingsModal({ config, onSave, onClose }: SettingsModal
                 </p>
               </div>
 
+              {/* NewsAPI Key */}
+              <div className="border-t border-gray-100 pt-5">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  NewsAPI 키 <span className="text-gray-400 font-normal">(선택)</span>
+                </label>
+                <input
+                  type="password"
+                  value={localConfig.newsApiKey || ''}
+                  onChange={e => setLocalConfig(c => ({ ...c, newsApiKey: e.target.value }))}
+                  placeholder="NewsAPI 키 입력"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
+                />
+                <p className="text-xs text-gray-400 mt-1.5">
+                  <a href="https://newsapi.org/register" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                    newsapi.org
+                  </a>
+                  에서 무료 키를 발급받으세요. 입력 시 실시간 뉴스 검색이 가능합니다.
+                </p>
+              </div>
+
               {/* Advanced Settings */}
               <div className="border-t border-gray-100 pt-5">
                 <h3 className="text-sm font-medium text-gray-700 mb-3">고급 설정</h3>
