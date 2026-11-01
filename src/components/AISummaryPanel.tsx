@@ -67,6 +67,39 @@ export default function AISummaryPanel({ summary, query }: AISummaryPanelProps) 
               </li>
             ))}
           </ul>
+
+          {/* Source Breakdown */}
+          {summary.sourceBreakdown && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <h4 className="text-xs font-semibold text-gray-500 mb-2">소스 유형별 분포</h4>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="bg-blue-50 rounded-lg p-2 text-center">
+                  <div className="font-bold text-blue-700">{summary.sourceBreakdown.official}</div>
+                  <div className="text-blue-600">공식</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-2 text-center">
+                  <div className="font-bold text-gray-700">{summary.sourceBreakdown.news}</div>
+                  <div className="text-gray-600">뉴스</div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-2 text-center">
+                  <div className="font-bold text-purple-700">{summary.sourceBreakdown.expert}</div>
+                  <div className="text-purple-600">전문가</div>
+                </div>
+                <div className="bg-sky-50 rounded-lg p-2 text-center">
+                  <div className="font-bold text-sky-700">{summary.sourceBreakdown.sns}</div>
+                  <div className="text-sky-600">SNS</div>
+                </div>
+                <div className="bg-indigo-50 rounded-lg p-2 text-center">
+                  <div className="font-bold text-indigo-700">{summary.sourceBreakdown.community}</div>
+                  <div className="text-indigo-600">커뮤니티</div>
+                </div>
+                <div className="bg-red-50 rounded-lg p-2 text-center">
+                  <div className="font-bold text-red-700">{summary.sourceBreakdown.rumor}</div>
+                  <div className="text-red-600">루머</div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">

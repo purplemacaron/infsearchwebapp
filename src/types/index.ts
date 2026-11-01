@@ -1,9 +1,12 @@
+export type SourceType = 'news' | 'official' | 'sns' | 'rumor' | 'community' | 'expert' | 'video' | 'blog';
+
 export interface NewsItem {
   id: string;
   title: string;
   summary: string;
   url: string;
   source: string;
+  sourceType: SourceType;
   sourceCredibility: number; // 0-100
   publishedAt: string;
   importance: number; // 0-100
@@ -14,6 +17,13 @@ export interface NewsItem {
   factCheckStatus: 'verified' | 'disputed' | 'unverified' | 'partially-verified';
   relatedArticles: string[];
   thumbnail?: string;
+  author?: string;
+  engagement?: {
+    likes?: number;
+    shares?: number;
+    comments?: number;
+    views?: number;
+  };
 }
 
 export interface ChatMessage {
@@ -31,6 +41,15 @@ export interface AISummary {
   consensus: string;
   controversies: string[];
   confidence: number;
+  totalSources: number;
+  sourceBreakdown: {
+    news: number;
+    official: number;
+    sns: number;
+    rumor: number;
+    community: number;
+    expert: number;
+  };
 }
 
 export interface TimelineEvent {
@@ -68,4 +87,5 @@ export interface SearchFilters {
   credibility: number;
   biasFilter: 'all' | 'left' | 'center' | 'right';
   sortBy: 'importance' | 'date' | 'credibility' | 'relevance';
+  sourceType: 'all' | SourceType;
 }
