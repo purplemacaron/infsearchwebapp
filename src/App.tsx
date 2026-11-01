@@ -35,9 +35,10 @@ function App() {
   });
   const [filters, setFilters] = useState<SearchFilters>({
     dateRange: '24h',
-    credibility: 50,
+    credibility: 0,
     biasFilter: 'all',
     sortBy: 'importance',
+    sourceType: 'all',
   });
 
   useEffect(() => {
@@ -101,6 +102,7 @@ function App() {
   const filteredResults = searchResults
     .filter(item => item.sourceCredibility >= filters.credibility)
     .filter(item => filters.biasFilter === 'all' || item.bias === filters.biasFilter)
+    .filter(item => filters.sourceType === 'all' || item.sourceType === filters.sourceType)
     .sort((a, b) => {
       switch (filters.sortBy) {
         case 'importance': return b.importance - a.importance;
@@ -146,6 +148,21 @@ function App() {
                   <option value="importance">중요도순</option>
                   <option value="date">최신순</option>
                   <option value="credibility">신뢰도순</option>
+                </select>
+                <select
+                  value={filters.sourceType}
+                  onChange={e => setFilters(f => ({ ...f, sourceType: e.target.value as any }))}
+                  className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">전체 소스</option>
+                  <option value="official">공식 발표</option>
+                  <option value="news">뉴스</option>
+                  <option value="expert">전문가</option>
+                  <option value="sns">SNS</option>
+                  <option value="community">커뮤니티</option>
+                  <option value="rumor">루머/찌라시</option>
+                  <option value="video">영상</option>
+                  <option value="blog">블로그</option>
                 </select>
                 <select
                   value={filters.dateRange}
@@ -203,24 +220,64 @@ function App() {
           )}
 
           {searchResults.length === 0 && !isSearching && (
-            <div className="text-center py-24">
-              <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center">
-                <svg className="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+            <div className="py-12">
+              <div className="text-center mb-10">
+                <div className="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center">
+                  <svg className="w-9 h-9 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-semibold text-gray-800 mb-2">정보를 검색하세요</h2>
+                <p className="text-gray-500 text-sm max-w-md mx-auto">
+                  AI가 뉴스, 공식 발표, SNS, 전문가 분석 등 다양한 소스를 분석하여 중요한 정보를 정리해드립니다
+                </p>
               </div>
-              <h2 className="text-xl font-semibold text-gray-700 mb-2">정보를 검색하세요</h2>
-              <p className="text-gray-400 text-sm">AI가 뉴스를 분석하고 중요한 정보를 정리해드립니다</p>
-              <div className="mt-8 flex flex-wrap justify-center gap-2">
-                {['AI 규제', '기후변화', '반도체', '부동산', '디지털화폐'].map(tag => (
-                  <button
-                    key={tag}
-                    onClick={() => handleSearch(tag)}
-                    className="px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-full text-sm text-gray-600 transition-all hover:border-gray-300 hover:shadow-sm"
-                  >
-                    {tag}
-                  </button>
-                ))}
+
+              {/* Features */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-100 rounded-xl p-5">
+                  <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center mb-3">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold text-gray-800 mb-1">다중 소스 분석</h3>
+                  <p className="text-xs text-gray-600">뉴스, 공식 발표, SNS, 전문가 분석 등 다양한 소스를 종합 분석</p>
+                </div>
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-100 rounded-xl p-5">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center mb-3">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold text-gray-800 mb-1">팩트체크</h3>
+                  <p className="text-xs text-gray-600">다중 소스 교차 검증을 통한 사실 확인 및 신뢰도 평가</p>
+                </div>
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 border border-purple-100 rounded-xl p-5">
+                  <div className="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center mb-3">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold text-gray-800 mb-1">편향성 분석</h3>
+                  <p className="text-xs text-gray-600">보도 프레임, 감정적 언어, 누락된 맥락 분석</p>
+                </div>
+              </div>
+
+              {/* Popular searches */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">인기 검색어</h3>
+                <div className="flex flex-wrap gap-2">
+                  {['AI 규제', '기후변화', '반도체', '부동산', '디지털화폐', '전기차', '원자력', '스타트업', '고용시장', '의료개혁'].map(tag => (
+                    <button
+                      key={tag}
+                      onClick={() => handleSearch(tag)}
+                      className="px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-full text-sm text-gray-600 transition-all hover:border-gray-300 hover:shadow-sm"
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
