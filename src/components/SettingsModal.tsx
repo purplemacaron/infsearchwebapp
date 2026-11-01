@@ -26,12 +26,24 @@ export default function SettingsModal({ config, onSave, onClose }: SettingsModal
   const loadModels = async () => {
     if (!localConfig.apiKey) return;
     setLoadingModels(true);
+    setAvailableModels([]); // 기존 모델 목록 초기화
+    
     try {
       const models = await fetchAvailableModels(localConfig);
       setAvailableModels(models);
     } catch (error) {
       console.error('Failed to load models:', error);
-      setAvailableModels(localConfig.provider === 'openai' ? OPENAI_MODELS : ANTHROPIC_MODELS);
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+      
+      // 에러 메시지를 사용자에게 표시
+      if (errorMessage.includes('CORS') || errorMessage.includes('Failed to fetch')) {
+        alert(`모델 목록을 가져올 수 없습니다.\n\n${errorMessage}\n\nBase URL을 확인하거나 CORS 프록시를 사용하세요.`);
+      } else {
+        alert(`모델 목록을 가져올 수 없습니다: ${errorMessage}`);
+      }
+      
+      // 에러 시 빈 목록 유지 (predefined 목록 사용하지 않음)
+      setAvailableModels([]);
     } finally {
       setLoadingModels(false);
     }
@@ -189,6 +201,47 @@ export default function SettingsModal({ config, onSave, onClose }: SettingsModal
                 </p>
               </div>
 
+              {/* CORS Proxy Settings */}
+              <div className="border-t border-gray-100 pt-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">CORS 프록시 사용</label>
+                    <p className="text-xs text-gray-400 mt-0.5">NVIDIA 등 CORS 차단 API 사용 시 활성화</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLocalConfig(c => ({ ...c, useCorsProxy: !c.useCorsProxy }))}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      localConfig.useCorsProxy ? 'bg-blue-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        localConfig.useCorsProxy ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                
+                {localConfig.useCorsProxy && (
+                  <div className="mt-3">
+                    <label className="block text-xs font-medium text-gray-600 mb-1.5">CORS 프록시 URL</label>
+                    <input
+                      type="text"
+                      value={localConfig.corsProxyUrl || ''}
+                      onChange={e => setLocalConfig(c => ({ ...c, corsProxyUrl: e.target.value }))}
+                      placeholder="https://cors-anywhere.herokuapp.com/"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-400 mt-1.5">
+                      공개 프록시: <code className="bg-gray-100 px-1 rounded">https://cors-anywhere.herokuapp.com/</code>
+                      <br />
+                      또는 자체 프록시 서버 URL을 입력하세요.
+                    </p>
+                  </div>
+                )}
+              </div>
+
               {/* Advanced Settings */}
               <div className="border-t border-gray-100 pt-5">
                 <h3 className="text-sm font-medium text-gray-700 mb-3">고급 설정</h3>
@@ -277,47 +330,90 @@ export default function SettingsModal({ config, onSave, onClose }: SettingsModal
                   <button
                     onClick={loadModels}
                     disabled={loadingModels}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                   >
-                    {loadingModels ? '로딩 중...' : '새로고침'}
+                    {loadingModels ? (
+                      <>
+                        <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        로딩 중...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        새로고침
+                      </>
+                    )}
                   </button>
                 )}
               </div>
+
+              {/* NVIDIA API 안내 */}
+              {localConfig.provider === 'openai' && localConfig.baseUrl?.includes('nvidia.com') && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+                  <div className="font-semibold mb-1">NVIDIA NIM API 안내</div>
+                  <ul className="space-y-1 text-amber-700">
+                    <li>• 모델 ID는 <code className="bg-amber-100 px-1 rounded">meta/llama-3.1-8b-instruct</code> 형식입니다</li>
+                    <li>• API 키는 <code className="bg-amber-100 px-1 rounded">nvapi-</code>로 시작해야 합니다</li>
+                    <li>• CORS 문제로 브라우저에서 직접 호출 시 실패할 수 있습니다</li>
+                    <li>• <a href="https://build.nvidia.com/explore/discover" target="_blank" rel="noopener noreferrer" className="underline font-medium">NVIDIA NIM 모델 목록</a>에서 사용 가능한 모델을 확인하세요</li>
+                  </ul>
+                </div>
+              )}
 
               {!localConfig.apiKey ? (
                 <div className="text-center py-12 text-gray-400">
                   <p className="text-sm">API 키를 입력하면 사용 가능한 모델을 확인할 수 있습니다.</p>
                 </div>
+              ) : loadingModels ? (
+                <div className="text-center py-12">
+                  <svg className="animate-spin h-8 w-8 mx-auto text-blue-500 mb-3" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  <p className="text-sm text-gray-500">API에서 모델 목록을 가져오는 중...</p>
+                </div>
               ) : (
-                <div className="space-y-2">
-                  {(availableModels.length > 0 ? availableModels : models).map(model => (
-                    <button
-                      key={model.id}
-                      onClick={() => setLocalConfig(c => ({ ...c, model: model.id }))}
-                      className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                        localConfig.model === model.id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between mb-1">
-                        <div className="font-semibold text-gray-800">{model.name}</div>
-                        {localConfig.model === model.id && (
-                          <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">선택됨</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-500 mb-2">{model.description}</div>
-                      <div className="flex items-center gap-3 text-xs text-gray-400">
-                        <span>컨텍스트: {(model.contextWindow / 1000).toFixed(0)}K</span>
-                        {model.pricing && (
-                          <>
-                            <span>입력: ${model.pricing.input}/1K</span>
-                            <span>출력: ${model.pricing.output}/1K</span>
-                          </>
-                        )}
-                      </div>
-                    </button>
-                  ))}
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {availableModels.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400">
+                      <p className="text-sm mb-2">사용 가능한 모델을 찾을 수 없습니다.</p>
+                      <p className="text-xs">API 키와 Base URL을 확인하세요.</p>
+                    </div>
+                  ) : (
+                    availableModels.map(model => (
+                      <button
+                        key={model.id}
+                        onClick={() => setLocalConfig(c => ({ ...c, model: model.id }))}
+                        className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                          localConfig.model === model.id
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-1">
+                          <div className="font-semibold text-gray-800 text-sm">{model.name}</div>
+                          {localConfig.model === model.id && (
+                            <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">선택됨</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500 mb-2">{model.description}</div>
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          <span>컨텍스트: {(model.contextWindow / 1000).toFixed(0)}K</span>
+                          {model.pricing && (
+                            <>
+                              <span>입력: ${model.pricing.input}/1K</span>
+                              <span>출력: ${model.pricing.output}/1K</span>
+                            </>
+                          )}
+                        </div>
+                      </button>
+                    ))
+                  )}
                 </div>
               )}
             </div>

@@ -83,6 +83,8 @@ export interface APIConfig {
   temperature: number;
   maxTokens: number;
   newsApiKey?: string;
+  useCorsProxy?: boolean;
+  corsProxyUrl?: string;
 }
 
 export interface ModelInfo {
