@@ -82,6 +82,7 @@ export interface APIConfig {
   model: string;
   temperature: number;
   maxTokens: number;
+  newsApiKey?: string;
 }
 
 export interface ModelInfo {
